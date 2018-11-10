@@ -1,7 +1,6 @@
 {
   "source_directories": [
-    "WDL",
-    "tests"
+    "WDL"
   ],
   "search_path": [
     "."

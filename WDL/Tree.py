@@ -267,7 +267,7 @@ class Conditional(SourceNode):
         outputs_env = _typecheck_workflow_body(self.elements, type_env, doc)
 
         # promote each output type T to T?
-        return _optionalize_types(outputs_env)
+        return _optionalize_types(outputs_env) # pyre-fixme
 
 class Workflow(SourceNode):
     name : str
@@ -336,7 +336,8 @@ def load(uri : str, path : List[str] = []) -> Document:
         if os.path.exists(fn):
             with open(fn, 'r') as infile:
                 # read and parse the document
-                doc = WDL._parser.parse_document(infile.read(), uri)
+                txt : str = infile.read()
+                doc = WDL._parser.parse_document(txt, uri)
                 assert isinstance(doc, Document)
                 # recursively descend into document's imports, and store the imported
                 # documents into doc.imports

@@ -14,7 +14,7 @@ class Linter(WDL.Walker.Base):
 
     def add(self, obj : WDL.SourceNode, message : str, subnode : Optional[WDL.SourceNode] = None):
         if not hasattr(obj, 'lint'):
-            obj.lint = []
+            setattr(obj, 'lint', [])
         obj.lint.append((subnode or obj, self.__class__.__name__, message))
 
 class ImpliedStringCoercion(Linter):

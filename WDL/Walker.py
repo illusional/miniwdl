@@ -90,33 +90,33 @@ class SetParents(Base):
     """
     def document(self, obj : WDL.Tree.Document) -> None:
         super().document(obj)
-        obj.parent = None
+        setattr(obj, "parent", None)
         for namespace,uri,subdoc in obj.imports:
-            subdoc.parent = obj
+            setattr(subdoc, "parent", obj)
         for task in obj.tasks:
-            task.parent = obj
+            setattr(task, "parent", obj)
         if obj.workflow:
-            obj.workflow.parent = obj
+            setattr(obj.workflow, "parent", obj)
     def workflow(self, obj : WDL.Tree.Workflow) -> None:
         super().workflow(obj)
-        obj.parent = None
+        setattr(obj, "parent", None)
         for elt in obj.elements:
-            elt.parent = obj
+            setattr(elt, "parent", obj)
     def scatter(self, obj : WDL.Tree.Scatter) -> None:
         super().scatter(obj)
-        obj.parent = None
+        setattr(obj, "parent", None)
         for elt in obj.elements:
-            elt.parent = obj
+            setattr(elt, "parent", obj)
     def conditional(self, obj : WDL.Tree.Conditional) -> None:
         super().conditional(obj)
-        obj.parent = None
+        setattr(obj, "parent", None)
         for elt in obj.elements:
-            elt.parent = obj
+            setattr(elt, "parent", obj)
     def task(self, obj : WDL.Tree.Task) -> None:
         super().task(obj)
-        obj.parent = None
+        setattr(obj, "parent", None)
         for elt in obj.inputs + obj.postinputs + obj.outputs:
-            elt.parent = obj
+            setattr(elt, "parent", obj)
 
 class MarkCalled(Base):
     """
@@ -126,7 +126,7 @@ class MarkCalled(Base):
     """
     marking : bool = False # True while recursing from the top-level workflow
     def workflow(self, obj : WDL.Tree.Workflow) -> None:
-        obj.called = False
+        setattr(obj, "called", False)
         if obj.parent.parent is None: # pyre-ignore
             assert not self.marking
             self.marking = True
@@ -138,6 +138,6 @@ class MarkCalled(Base):
         assert self.marking
         if isinstance(obj.callee, WDL.Tree.Workflow):
             self(obj.callee)
-        obj.callee.called = True
+        setattr(obj.callee, "called", True)
     def task(self, obj : WDL.Tree.Task) -> None:
-        obj.called = False
+        setattr(obj, "called", False)
