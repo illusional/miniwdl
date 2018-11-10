@@ -171,7 +171,6 @@ version: "version" /[^ \t\r\n]+/
 import_doc: "import" string_literal ["as" CNAME]
 ?document_element: import_doc | task | workflow
 document: version? document_element*
-        | version? document_element*
 
 COMMENT: "#" /[^\r\n]*/ NEWLINE
 
@@ -205,8 +204,10 @@ def parse(txt : str, start : str) -> lark.Tree:
     return larks_by_start[start].parse(txt)
 
 def sp(filename,meta) -> SourcePosition:
-    return SourcePosition(filename=filename, line=meta.line, column=meta.column,
-                          end_line=meta.end_line, end_column=meta.end_column)
+    assert hasattr(meta, 'line') or meta.empty == True
+    return SourcePosition(filename=filename,
+                          line=getattr(meta, 'line', None), column=getattr(meta, 'column', None),
+                          end_line=getattr(meta, 'end_line', None), end_column=getattr(meta, 'end_column', None))
 
 def to_int(x):
     return int(x)
