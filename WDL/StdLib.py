@@ -330,23 +330,57 @@ def _parse_map(s: str) -> Value.Map:
 def _parse_json(s: str) -> Value.Base:
     # TODO: handle nested map/array types...tricky as don't know the expected WDL type
     j = json.loads(s)
+    return check_and_instantiate_from_value(j)
+
+
+def get_type_from_value(j: any) -> Type.Base:
     if isinstance(j, dict):
         ans = []
+        inner = None
         for k in j:
-            ans.append((Value.String(str(k)), Value.from_json(Type.Any(), j[k])))
-        return Value.Map((Type.String(), Type.Any()), ans)
+            inner = check_and_instantiate_from_value(j[k])
+            ans.append((Value.String(str(k)), Value.from_json(inner, j[k])))
+        return Type.Map((Type.String(), inner or Type.Any()))
     if isinstance(j, list):
-        return Value.Array(Type.Any(), [Value.from_json(Type.Any(), v) for v in j])
+        inner = get_type_from_value(j[0]) if len(j) > 0 else Type.Any()
+        return Type.Array(inner)
+    if isinstance(j, bool):
+        return Type.Boolean()
+    if isinstance(j, int):
+        return Type.Int()
+    if isinstance(j, float):
+        return Type.Float()
+    if isinstance(j, str):
+        return Type.String()
+    if j is None:
+        return Type.Optional(Type.Any)
+    raise Error.InputError("parse_json()")
+
+def check_and_instantiate_from_value(j: any) -> Value.Base:
+    if isinstance(j, dict):
+        ans = []
+        inner = None
+        for k in j:
+            inner = get_type_from_value(j[k])
+            ans.append((Value.String(str(k)), Value.from_json(inner, j[k])))
+        return Value.Map((Type.String(), inner or Type.Any()), ans)
+    if isinstance(j, list):
+        # try to guess the type inside
+        inner = get_type_from_value(j[0]) if len(j) > 0 else Type.Any()
+        values = [Value.from_json(inner, v) for v in j]
+
+        return Value.Array(inner, values)
     if isinstance(j, bool):
         return Value.Boolean(j)
     if isinstance(j, int):
         return Value.Int(j)
     if isinstance(j, float):
         return Value.Float(j)
+    if isinstance(j, str):
+        return Value.String(j)
     if j is None:
         return Value.Null()
     raise Error.InputError("parse_json()")
-
 
 def _serialize_lines(array: Value.Array, outfile: BinaryIO) -> None:
     for item in array.value:
